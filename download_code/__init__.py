@@ -1,11 +1,12 @@
 """Code to parse and download Dataverse datasets."""
+
 import datetime
 import hashlib
 import json
 import multiprocessing as mp
 import os
 import urllib.request
-import urllib.request
+from urllib.error import HTTPError
 
 
 class DataverseDownloader:
@@ -138,7 +139,7 @@ class DataverseDownloader:
         return {k: v for k, v in file_id_mapping.items() if filter_fn(k, v)}
 
     def compare_checksum(self, filepath, checksum):
-        with open(filepath, 'rb') as fp:
+        with open(filepath, "rb") as fp:
             return hashlib.md5(fp.read()).hexdigest() == checksum
 
     def download(self, data):
@@ -159,45 +160,54 @@ class DataverseDownloader:
         index, (path, mapping) = data
         filepath = os.path.join(self.download_path, path)
         print_preamble = (
-            f"({index+1}/{self._total}) | "
+            f"({index + 1}/{self._total}) | "
             if self.multiprocessing not in [0, 1]
             else ""
         )
 
         if os.path.exists(filepath) and not self.overwrite:
             if self.check_md5:
-                checksum_comparison = self.compare_checksum(filepath, mapping['md5'])
+                checksum_comparison = self.compare_checksum(filepath, mapping["md5"])
                 if checksum_comparison:
-                    print(
-                        f"{print_preamble}{filepath} already exists and has the same "
-                        f"checksum, skipping (set overwrite=True to overwrite)"
-                    )
+                    if self.verbose:
+                        print(
+                            f"{print_preamble}{filepath} already exists and has the same "
+                            f"checksum, skipping (set overwrite=True to overwrite)"
+                        )
                     return filepath
                 else:
-                    print(
-                        f"{print_preamble}{filepath} already exists but has a"
-                        f" different checksum, overwriting"
-                    )
+                    if self.verbose:
+                        print(
+                            f"{print_preamble}{filepath} already exists but has a"
+                            f" different checksum, overwriting"
+                        )
             else:
-                print(
-                    f"{print_preamble}{filepath} already exists,"
-                    f"skipping (set overwrite=True to overwrite)"
-                )
+                if self.verbose:
+                    print(
+                        f"{print_preamble}{filepath} already exists,"
+                        f"skipping (set overwrite=True to overwrite)"
+                    )
                 return filepath
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        print(f"{print_preamble}Downloading {path} to {filepath}...", end=" ")
-        urllib.request.urlretrieve(self.get_url(mapping['id']), filename=filepath)
+        if self.verbose:
+            print(f"{print_preamble}Downloading {path} to {filepath}...", end=" ")
+        try:
+            urllib.request.urlretrieve(self.get_url(mapping["id"]), filename=filepath)
+        except HTTPError as e:
+            print(f"Could not access file {filepath} because of {e}")
+            return filepath
 
         extra_msg = ""
         if self.check_md5:
-            checksum_comparison = self.compare_checksum(filepath, mapping['md5'])
+            checksum_comparison = self.compare_checksum(filepath, mapping["md5"])
             if not checksum_comparison:
                 raise ValueError(
                     f"Checksum of {filepath} does not match the expected checksum."
                 )
             else:
                 extra_msg = " (checksum matches)"
-        print(f"Done{extra_msg}")
+        if self.verbose:
+            print(f"Done{extra_msg}")
         return filepath
 
 
@@ -227,8 +237,10 @@ class DataverseParser:
         str
             The URL to get the dataset information from.
         """
-        return f"https://{self.server}/api/datasets/:persistentId/" \
-               f"?persistentId={dataset_id}"
+        return (
+            f"https://{self.server}/api/datasets/:persistentId/"
+            f"?persistentId={dataset_id}"
+        )
 
     def __call__(self, dataset_id):
         """Create a mapping between the relative path to the file and the file ID.
@@ -251,8 +263,8 @@ class DataverseParser:
         info = json.loads(raw_info)
         version_info = info["data"]["latestVersion"]
         print(
-            f'Parsing data for version: '
-            f'{version_info["versionNumber"]}.{version_info["versionMinorNumber"]}.'
+            f"Parsing data for version: "
+            f"{version_info['versionNumber']}.{version_info['versionMinorNumber']}."
         )
         # Parse the files
         file_id_mapping = {}
@@ -261,7 +273,7 @@ class DataverseParser:
                 file_info.get("directoryLabel", ""), file_info["dataFile"]["filename"]
             )
             file_id_mapping[path] = {
-                'id': file_info["dataFile"]["id"],
-                'md5': file_info["dataFile"]["md5"],
+                "id": file_info["dataFile"]["id"],
+                "md5": file_info["dataFile"]["md5"],
             }
         return file_id_mapping
