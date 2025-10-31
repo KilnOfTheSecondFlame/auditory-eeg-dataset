@@ -1,10 +1,12 @@
 """Code for the dataset_generator for task1."""
+
 import itertools
 import os
 
 import numpy as np
-import tensorflow as tf
 import scipy.signal
+import tensorflow as tf
+
 
 @tf.function
 def default_batch_equalizer_fn(*args):
@@ -58,7 +60,7 @@ def create_tf_dataset(
     batch_size=64,
     data_types=(tf.float32, tf.float32, tf.float32),
     feature_dims=(64, 1, 1),
-    eeg_first = True # if eeg_first is True, the first feature is eeg, otherwise the first feature is the stimulus
+    eeg_first=True,  # if eeg_first is True, the first feature is eeg, otherwise the first feature is the stimulus
 ):
     """Creates a tf.data.Dataset.
 
@@ -106,8 +108,7 @@ def create_tf_dataset(
     # window dataset
     dataset = dataset.map(
         lambda *args: [
-            tf.signal.frame(arg, window_length, hop_length, axis=0)
-            for arg in args
+            tf.signal.frame(arg, window_length, hop_length, axis=0) for arg in args
         ]
     )
 
@@ -127,16 +128,10 @@ def create_tf_dataset(
     return dataset
 
 
-
 class MatchMismatchDataGenerator:
     """Generate data for the Match/Mismatch task."""
 
-    def __init__(
-        self,
-        files,
-        window_length,
-        spacing
-    ):
+    def __init__(self, files, window_length, spacing):
         """Initialize the DataGenerator.
 
         Parameters
@@ -167,7 +162,9 @@ class MatchMismatchDataGenerator:
             by the self.feature_sort_fn.
         """
         new_files = []
-        grouped = itertools.groupby(sorted(files), lambda x: "_-_".join(os.path.basename(x).split("_-_")[:3]))
+        grouped = itertools.groupby(
+            sorted(files), lambda x: "_-_".join(os.path.basename(x).split("_-_")[:3])
+        )
         for recording_name, feature_paths in grouped:
             new_files += [sorted(feature_paths, key=lambda x: "0" if x == "eeg" else x)]
         return new_files
@@ -193,7 +190,6 @@ class MatchMismatchDataGenerator:
             data += [np.load(feature).astype(np.float32)]
         data = self.prepare_data(data)
         return tuple(tf.constant(x) for x in data)
-
 
     def __call__(self):
         """Load data for the next recording.
@@ -232,11 +228,10 @@ class MatchMismatchDataGenerator:
         for stimulus_feature in data[1:]:
             match_feature = stimulus_feature[:new_length, ...]
             mismatch_feature = stimulus_feature[
-                self.spacing + self.window_length:, ...
+                self.spacing + self.window_length :, ...
             ]
             resulting_data += [match_feature, mismatch_feature]
         return resulting_data
-
 
 
 class RegressionDataGenerator:
@@ -245,9 +240,9 @@ class RegressionDataGenerator:
     def __init__(
         self,
         files,
-        window_length= None,
-        high_pass_freq= None,
-        low_pass_freq= None,
+        window_length=None,
+        high_pass_freq=None,
+        low_pass_freq=None,
         return_filenames=False,
     ):
         """Initialize the DataGenerator.
@@ -265,26 +260,23 @@ class RegressionDataGenerator:
         self.low_pass_freq = low_pass_freq
 
         if self.high_pass_freq and self.low_pass_freq:
-            self.filter_ = scipy.signal.butter(N= 1,
-                                          Wn =[self.high_pass_freq, self.low_pass_freq],
-                                          btype= "bandpass",
-                                          fs=64,
-                                          output="sos")
+            self.filter_ = scipy.signal.butter(
+                N=1,
+                Wn=[self.high_pass_freq, self.low_pass_freq],
+                btype="bandpass",
+                fs=64,
+                output="sos",
+            )
         if self.high_pass_freq and not self.low_pass_freq:
-            self.filter_ = scipy.signal.butter(N= 1,
-                                          Wn = self.high_pass_freq,
-                                          btype= "highpass",
-                                          fs=64,
-                                          output="sos")
+            self.filter_ = scipy.signal.butter(
+                N=1, Wn=self.high_pass_freq, btype="highpass", fs=64, output="sos"
+            )
         if not self.high_pass_freq and self.low_pass_freq:
-            self.filter_ = scipy.signal.butter(N= 1,
-                                          Wn = self.low_pass_freq,
-                                          btype= "lowpass",
-                                          fs=64,
-                                          output="sos")
+            self.filter_ = scipy.signal.butter(
+                N=1, Wn=self.low_pass_freq, btype="lowpass", fs=64, output="sos"
+            )
         if not self.high_pass_freq and not self.low_pass_freq:
             self.filter_ = None
-
 
     def group_recordings(self, files):
         """Group recordings and corresponding stimuli.
@@ -301,7 +293,9 @@ class RegressionDataGenerator:
             by the self.feature_sort_fn.
         """
         new_files = []
-        grouped = itertools.groupby(sorted(files), lambda x: "_-_".join(os.path.basename(x).split("_-_")[:3]))
+        grouped = itertools.groupby(
+            sorted(files), lambda x: "_-_".join(os.path.basename(x).split("_-_")[:3])
+        )
         for recording_name, feature_paths in grouped:
             new_files += [sorted(feature_paths, key=lambda x: "0" if x == "eeg" else x)]
         return new_files
@@ -332,7 +326,6 @@ class RegressionDataGenerator:
         else:
             return tuple(tf.constant(x) for x in data)
 
-
     def __call__(self):
         """Load data for the next recording.
 
@@ -352,23 +345,25 @@ class RegressionDataGenerator:
         np.random.shuffle(self.files)
 
     def prepare_data(self, data):
-       """ If specified, filter the data between highpass and lowpass
-       :param data:  list of numpy arrays, eeg and envelope
-       :return: filtered data
+        """If specified, filter the data between highpass and lowpass
+        :param data:  list of numpy arrays, eeg and envelope
+        :return: filtered data
 
-       """
+        """
 
-       if self.filter_ is not None:
-           resulting_data = []
-           # assuming time is the first dimension and channels the second
-           resulting_data.append(scipy.signal.sosfiltfilt(self.filter_, data[0], axis=0))
+        if self.filter_ is not None:
+            resulting_data = []
+            # assuming time is the first dimension and channels the second
+            resulting_data.append(
+                scipy.signal.sosfiltfilt(self.filter_, data[0], axis=0)
+            )
 
-           for stimulus_feature in data[1:]:
-               resulting_data.append(scipy.signal.sosfiltfilt(self.filter_, stimulus_feature, axis=0))
+            for stimulus_feature in data[1:]:
+                resulting_data.append(
+                    scipy.signal.sosfiltfilt(self.filter_, stimulus_feature, axis=0)
+                )
 
-       else:
-           resulting_data = data
+        else:
+            resulting_data = data
 
-       return resulting_data
-
-
+        return resulting_data

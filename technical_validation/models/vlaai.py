@@ -1,6 +1,7 @@
 """Code to construct the VLAAI network.
 Code was extrcted from https://github.com/exporl/vlaai
 """
+
 import tensorflow as tf
 
 

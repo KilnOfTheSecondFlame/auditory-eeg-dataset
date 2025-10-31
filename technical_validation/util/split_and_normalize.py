@@ -1,34 +1,44 @@
 """Split data in sets and normalize (per recording)."""
+
 import glob
 import json
 import os
 import pickle
+
 import numpy as np
 
-
 if __name__ == "__main__":
-
     # Arguments for splitting and normalizing
-    speech_features = ['envelope']
+    speech_features = ["envelope"]
     splits = [80, 10, 10]
-    split_names = ['train', 'val', 'test']
+    split_names = ["train", "val", "test"]
     overwrite = False
 
     # Calculate the split fraction
-    split_fractions = [x/sum(splits) for x in splits]
+    split_fractions = [x / sum(splits) for x in splits]
 
     # Get the path to the config file
     main_folder = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-    config_path = os.path.join(main_folder, 'config.json')
+    config_path = os.path.join(main_folder, "config.json")
 
     # Load the config
     with open(config_path) as fp:
         config = json.load(fp)
 
     # Construct the necessary paths
-    processed_eeg_folder = os.path.join(config["dataset_folder"], config["derivatives_folder"],config["preprocessed_eeg_folder"])
-    processed_stimuli_folder = os.path.join(config["dataset_folder"],config["derivatives_folder"], config["preprocessed_stimuli_folder"])
-    split_data_folder = os.path.join(config["dataset_folder"], config["derivatives_folder"], config["split_folder"])
+    processed_eeg_folder = os.path.join(
+        config["dataset_folder"],
+        config["derivatives_folder"],
+        config["preprocessed_eeg_folder"],
+    )
+    processed_stimuli_folder = os.path.join(
+        config["dataset_folder"],
+        config["derivatives_folder"],
+        config["preprocessed_stimuli_folder"],
+    )
+    split_data_folder = os.path.join(
+        config["dataset_folder"], config["derivatives_folder"], config["split_folder"]
+    )
 
     # Create the output folder
     os.makedirs(split_data_folder, exist_ok=True)
@@ -47,7 +57,9 @@ if __name__ == "__main__":
         print(f"\tFound {len(all_recordings)} recordings for subject {subject}.")
         # Loop over recordings
         for recording_index, recording in enumerate(all_recordings):
-            print(f"\tStarting with recording {recording} ({recording_index + 1}/{len(all_recordings)})...")
+            print(
+                f"\tStarting with recording {recording} ({recording_index + 1}/{len(all_recordings)})..."
+            )
 
             # Load EEG from disk
             print(f"\t\tLoading EEG for {recording}")
@@ -60,7 +72,7 @@ if __name__ == "__main__":
             eeg = eeg[:, :64]
 
             # retrieve the stimulus name from the filename
-            stimulus_filename = recording.split('_eeg.')[0].split('-audio-')[1]
+            stimulus_filename = recording.split("_eeg.")[0].split("-audio-")[1]
 
             # Retrieve EEG data and pointer to the stimulus
             shortest_length = eeg.shape[0]
@@ -99,7 +111,7 @@ if __name__ == "__main__":
                     if feature_mean is None:
                         feature_mean = np.mean(cut_feature, axis=0)
                         feature_std = np.std(cut_feature, axis=0)
-                    norm_feature = (cut_feature - feature_mean)/feature_std
+                    norm_feature = (cut_feature - feature_mean) / feature_std
 
                     # Save the feature
                     save_filename = f"{split_name}_-_{subject}_-_{stimulus_filename}_-_{feature_name}.npy"
@@ -109,4 +121,3 @@ if __name__ == "__main__":
                     else:
                         print(f"\t\tSkipping {save_filename} because it already exists")
                     start_index = end_index
-

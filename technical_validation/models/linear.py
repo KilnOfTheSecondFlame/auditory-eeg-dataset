@@ -1,7 +1,6 @@
-""" This module contains linear backward model"""
+"""This module contains linear backward model"""
+
 import tensorflow as tf
-
-
 
 
 @tf.function
@@ -41,7 +40,10 @@ def pearson_metric_cut(y_true, y_pred, axis=1):
         Pearson metric.
         Shape is (batch_size, 1, n_features)
     """
-    return tf.reduce_mean( pearson_tf(y_true[:, : tf.shape(y_pred)[1], :], y_pred, axis=axis), axis=-1)
+    return tf.reduce_mean(
+        pearson_tf(y_true[:, : tf.shape(y_pred)[1], :], y_pred, axis=axis), axis=-1
+    )
+
 
 @tf.function
 def pearson_metric_cut_not_av(y_true, y_pred, axis=1):
@@ -60,10 +62,12 @@ def pearson_metric_cut_not_av(y_true, y_pred, axis=1):
         Pearson metric.
         Shape is (batch_size, 1, n_features)
     """
-    return  pearson_tf(y_true[:, : tf.shape(y_pred)[1], :], y_pred, axis=axis)
+    return pearson_tf(y_true[:, : tf.shape(y_pred)[1], :], y_pred, axis=axis)
 
 
-def simple_linear_model(integration_window=32, nb_filters=1, nb_channels=64, metric= pearson_metric_cut):
+def simple_linear_model(
+    integration_window=32, nb_filters=1, nb_channels=64, metric=pearson_metric_cut
+):
     inp = tf.keras.layers.Input(
         (
             None,
@@ -72,13 +76,8 @@ def simple_linear_model(integration_window=32, nb_filters=1, nb_channels=64, met
     )
     out = tf.keras.layers.Conv1D(nb_filters, integration_window)(inp)
     model = tf.keras.models.Model(inputs=[inp], outputs=[out])
-    model.compile(
-        tf.keras.optimizers.Adam(),
-        loss=pearson_loss_cut,
-        metrics=[metric]
-    )
+    model.compile(tf.keras.optimizers.Adam(), loss=pearson_loss_cut, metrics=[metric])
     return model
-
 
 
 def pearson_tf(y_true, y_pred, axis=1):
