@@ -19,6 +19,7 @@ class DataverseDownloader:
         check_md5=True,
         multiprocessing=-1,
         datetime_format="%Y-%m-%d %H:%M:%S",
+        verbose=False,
     ):
         """Create a new DataverseDownloader.
 
@@ -39,6 +40,7 @@ class DataverseDownloader:
         datetime_format: str
             The datetime format to use for printing the start and end time of the
             download.
+        verbose: If warnings should be printed
         """
         self.download_path = download_path
         self.overwrite = overwrite
@@ -46,6 +48,7 @@ class DataverseDownloader:
         self.multiprocessing = multiprocessing
         self.server = server
         self.datetime_format = datetime_format
+        self.verbose = verbose
         self._total = 0
 
     def get_url(self, file_id):

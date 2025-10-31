@@ -1,3 +1,4 @@
+---
 dataloaders:
   - name: sparrkulee_eeg_loader
     callable: GlobLoader
@@ -89,7 +90,3 @@ config:
       - {{ __filedir__ }}/sparrKULee.py
   logging:
     log_path: {{ __filedir__ }}/sparrKULee_{datetime}.log
-
-
-
-

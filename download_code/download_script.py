@@ -1,4 +1,5 @@
 """Script to download the auditory EEG dataset from RDR."""
+
 import argparse
 import os.path
 
@@ -31,16 +32,20 @@ if __name__ == "__main__":
         type=int,
         default=-1,
         help="Number of cores to use for multiprocessing. "
-             "Default: -1 (all cores), set to 0 or 1 to disable multiprocessing.",
+        "Default: -1 (all cores), set to 0 or 1 to disable multiprocessing.",
     )
     parser.add_argument(
         "--subset",
         choices=["full", "preprocessed", "stimuli"],
         default="full",
-        help='Download only a subset of the dataset. '
-             '"full" downloads the full dataset, '
-             '"preprocessed" downloads only the preprocessed data and '
-             '"stimuli" downloads only the stimuli files. Default: full',
+        help="Download only a subset of the dataset. "
+        '"full" downloads the full dataset, '
+        '"preprocessed" downloads only the preprocessed data and '
+        '"stimuli" downloads only the stimuli files. Default: full',
+    )
+    parser.add_argument(
+        "--non-verbose",
+        action="store_true",
     )
     parser.add_argument(
         "download_directory", type=str, help="Path to download the dataset to."
@@ -74,6 +79,7 @@ if __name__ == "__main__":
         overwrite=args.overwrite,
         multiprocessing=args.multiprocessing,
         check_md5=not args.skip_checksum,
+        verbose=not args.non_verbose,
     )
     print(
         f"Starting download of set {args.subset} from {args.server} to "

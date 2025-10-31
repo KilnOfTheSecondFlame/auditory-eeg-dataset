@@ -1,4 +1,5 @@
 """Run the default preprocessing pipeline on sparrKULee."""
+
 import argparse
 import datetime
 import gzip
@@ -11,12 +12,11 @@ import librosa
 import numpy as np
 import scipy.signal
 import scipy.signal.windows
-
 from brain_pipe.dataloaders.path import GlobLoader
 from brain_pipe.pipeline.default import DefaultPipeline
 from brain_pipe.preprocessing.brain.artifact import (
-    InterpolateArtifacts,
     ArtifactRemovalMWF,
+    InterpolateArtifacts,
 )
 from brain_pipe.preprocessing.brain.eeg.biosemi import (
     biosemi_trigger_processing_fn,
@@ -24,8 +24,8 @@ from brain_pipe.preprocessing.brain.eeg.biosemi import (
 from brain_pipe.preprocessing.brain.eeg.load import LoadEEGNumpy
 from brain_pipe.preprocessing.brain.epochs import SplitEpochs
 from brain_pipe.preprocessing.brain.link import (
-    LinkStimulusToBrainResponse,
     BIDSStimulusInfoExtractor,
+    LinkStimulusToBrainResponse,
 )
 from brain_pipe.preprocessing.brain.rereference import CommonAverageRereference
 from brain_pipe.preprocessing.brain.trigger import (
@@ -33,12 +33,12 @@ from brain_pipe.preprocessing.brain.trigger import (
 )
 from brain_pipe.preprocessing.filter import SosFiltFilt
 from brain_pipe.preprocessing.resample import ResamplePoly
-from brain_pipe.preprocessing.stimulus.audio.spectrogram import LibrosaMelSpectrogram
 from brain_pipe.preprocessing.stimulus.audio.envelope import GammatoneEnvelope
+from brain_pipe.preprocessing.stimulus.audio.spectrogram import LibrosaMelSpectrogram
 from brain_pipe.preprocessing.stimulus.load import LoadStimuli
 from brain_pipe.runner.default import DefaultRunner
 from brain_pipe.save.default import DefaultSave
-from brain_pipe.utils.log import default_logging, DefaultFormatter
+from brain_pipe.utils.log import DefaultFormatter, default_logging
 from brain_pipe.utils.path import BIDSStimulusGrouper
 
 
@@ -452,10 +452,9 @@ if __name__ == "__main__":
         "--overwrite", action="store_true", help="Overwrite existing files"
     )
     parser.add_argument(
-        "--log_path", type=str, default=os.path.join(
-            default_log_folder,
-            "sparrKULee_{datetime}.log"
-        )
+        "--log_path",
+        type=str,
+        default=os.path.join(default_log_folder, "sparrKULee_{datetime}.log"),
     )
     parser.add_argument(
         "--dataset_folder",
