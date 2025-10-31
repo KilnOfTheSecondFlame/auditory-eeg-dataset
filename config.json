@@ -1,5 +1,5 @@
 {
-  "dataset_folder": "null",
+  "dataset_folder": "C:\\Users\\11pbaumann\\LocalPythonProjects\\auditory-eeg-dataset\\data",
   "derivatives_folder": "derivatives",
   "preprocessed_eeg_folder": "preprocessed_eeg",
   "preprocessed_stimuli_folder": "preprocessed_stimuli",
